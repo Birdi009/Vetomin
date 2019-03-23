@@ -1,2 +1,2 @@
-# Vetomin
-Vegan, Keto, Minimalist Website 
+# Vetomin E
+Vegan, Keto, Minimalist, Eco-Friendly Website 
