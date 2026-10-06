@@ -4,5 +4,6 @@
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] },
     "types": ["vite/client"]
-  }
+  },
+  "exclude": ["infra", "dist", "node_modules"]
 }
