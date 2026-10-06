@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RoutePath from '../../components/RoutePath.astro';
+import ProjectMedia from '../../components/ProjectMedia.astro';
 export async function getStaticPaths(){
   const projects=await getCollection('projects');
   return projects.map(p=>({params:{slug:p.id.replace(/\.mdx?$/,'')},props:{project:p}}));
@@ -10,15 +11,24 @@ const { project }=Astro.props;
 const { Content }=await render(project);
 const d=project.data;
 const base=import.meta.env.BASE_URL;
+const slug=project.id.replace(/\.mdx?$/,'');
+const breadcrumb={
+  '@context':'https://schema.org','@type':'BreadcrumbList',
+  itemListElement:[
+    {'@type':'ListItem',position:1,name:'Work',item:new URL(base+'work/',Astro.site).href},
+    {'@type':'ListItem',position:2,name:d.shortTitle,item:Astro.url.href}
+  ]
+};
 ---
 <BaseLayout title={d.title+' — Quiet Compass'} description={d.description} element={d.element} route={d.route}>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
   <section data-route-section data-element={d.element} data-bearing="80">
     <div class="shell">
       <a class="route" href={base+'work/'}>← Work / {d.route}</a>
       <div class="case-grid" style="margin-top:2rem">
         <div>
           <span class="route">{d.services.join(' · ')} · {d.year}</span>
-          <h1 class="project-title" style="font-size:var(--step-3);margin:.6rem 0 1.2rem">{d.title}</h1>
+          <h1 class="project-title" style={`font-size:var(--step-3);margin:.6rem 0 1.2rem;view-transition-name:project-title-${slug}`}>{d.title}</h1>
           <p class="lead">{d.description}</p>
         </div>
         <aside class="panel" style="padding:1.2rem">
@@ -27,27 +37,28 @@ const base=import.meta.env.BASE_URL;
           <span class="route">ELEMENT</span><p style="text-transform:capitalize">{d.element}</p>
         </aside>
       </div>
-      <div class="project-visual project-media" style="min-height:clamp(320px,50vw,620px);margin-top:3rem" aria-label="Procedural project landscape"></div>
+      <ProjectMedia slug={slug} alt={d.shortTitle+' procedural project landscape'} class="project-visual project-media hero-media" />
     </div>
   </section>
-  <section id="route" data-element={d.element} data-bearing="124">
+  <section id="route" class="deferred" data-element={d.element} data-bearing="124">
     <div class="shell" data-reveal>
       <span class="route">CASE ROUTE</span>
       <RoutePath/>
     </div>
   </section>
-  <section id="story" data-element="earth" data-bearing="190">
+  <section id="story" class="deferred" data-element="earth" data-bearing="190">
     <div class="shell case-grid">
       <article data-reveal><Content /></article>
       <aside class="case-aside panel" style="padding:1.3rem" data-reveal>
         <span class="route">OUTCOME SIGNAL</span>
         <div class="metric">{d.metric}</div>
         <p>{d.metricLabel}</p>
+        <div class="metric-viz" role="img" aria-label={d.metric+' '+d.metricLabel}><span></span><span></span><span></span><span></span></div>
         <p class="route">This demo uses the project claims already present in Quiet Compass; it does not invent external business metrics.</p>
       </aside>
     </div>
   </section>
-  <section id="compare" data-element="metal" data-bearing="248">
+  <section id="compare" class="deferred" data-element="metal" data-bearing="248">
     <div class="shell" data-reveal>
       <div class="section-head"><div><span class="route">BEFORE / AFTER</span><h2>Complexity becomes orientation.</h2></div><p>The slider is an enhancement: both states are named in text and remain understandable without the control.</p></div>
       <div class="before-after" data-before-after>
@@ -58,16 +69,22 @@ const base=import.meta.env.BASE_URL;
       </div>
     </div>
   </section>
-  <section id="diagram" data-element="wood" data-bearing="285">
+  <section id="diagram" class="deferred" data-element="wood" data-bearing="285">
     <div class="shell" data-reveal>
       <div class="section-head"><div><span class="route">SYSTEM MAP</span><h2>Explore the decision architecture.</h2></div><p>Every visual node has a text equivalent; the diagram supplements rather than replaces the explanation.</p></div>
-      <div class="diagram">
+      <div class="diagram" data-diagram>
         <svg viewBox="0 0 900 300" role="img" aria-labelledby="diagram-title"><title id="diagram-title">A route from research through decision to outcome</title><path d="M80 150 H300 C350 150 350 70 420 70 H620 C680 70 680 150 820 150" fill="none" stroke="currentColor" opacity=".2" stroke-width="2"/><circle cx="80" cy="150" r="42" fill="none" stroke="currentColor"/><circle cx="420" cy="70" r="42" fill="none" stroke="currentColor"/><circle cx="820" cy="150" r="42" fill="none" stroke="currentColor"/><text x="80" y="155" text-anchor="middle" fill="currentColor">Research</text><text x="420" y="75" text-anchor="middle" fill="currentColor">Decision</text><text x="820" y="155" text-anchor="middle" fill="currentColor">Outcome</text></svg>
+        <div class="diagram-controls" role="group" aria-label="Explore system map">
+          <button class="filter-btn" type="button" data-diagram-step="Research">Research</button>
+          <button class="filter-btn" type="button" data-diagram-step="Decision">Decision</button>
+          <button class="filter-btn" type="button" data-diagram-step="Outcome">Outcome</button>
+        </div>
+        <p class="status" data-diagram-status aria-live="polite">Choose a node to hear what it contributes to the route.</p>
         <details><summary>Text alternative</summary><p>Research identifies the constraint. The design turns that constraint into a smaller set of decisions. The result is an outcome whose route is easier to understand.</p></details>
       </div>
     </div>
   </section>
-  <section data-element="fire" data-bearing="330">
+  <section class="deferred" data-element="fire" data-bearing="330">
     <div class="shell section-head" data-reveal><div><span class="route">NEXT ACTION</span><h2>{d.cta}.</h2></div><div><a class="btn primary magnetic" href={base+'contact/?project='+encodeURIComponent(d.shortTitle)}>Send a project note →</a></div></div>
   </section>
 </BaseLayout>
