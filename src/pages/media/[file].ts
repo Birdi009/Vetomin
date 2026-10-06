@@ -20,7 +20,7 @@ function svg(slug:string,width:number){
 }
 export const GET: APIRoute = async({props})=>{
   const {slug,width,format}=props as {slug:string,width:number,format:'webp'|'avif'};
-  let pipe=sharp(Buffer.from(svg(slug,width))).resize(width);
-  const body= format==='avif' ? await pipe.avif({quality:58}).toBuffer() : await pipe.webp({quality:72}).toBuffer();
-  return new Response(body,{headers:{'Content-Type':format==='avif'?'image/avif':'image/webp','Cache-Control':'public,max-age=31536000,immutable'}});
+  const pipe=sharp(Buffer.from(svg(slug,width))).resize(width);
+  const body=format==='avif' ? await pipe.avif({quality:58}).toBuffer() : await pipe.webp({quality:72}).toBuffer();
+  return new Response(new Uint8Array(body),{headers:{'Content-Type':format==='avif'?'image/avif':'image/webp','Cache-Control':'public,max-age=31536000,immutable'}});
 };
