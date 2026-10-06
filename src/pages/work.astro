@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectGrid from '../components/ProjectGrid.astro';
+---
+<BaseLayout title="Work — Quiet Compass" description="Selected Quiet Compass case studies, filterable by service and preserved in shareable URLs." element="water" route="B02">
+  <section data-route-section data-element="water" data-bearing="68">
+    <div class="shell">
+      <div class="section-head" data-reveal><div><span class="route">B02 / WORK</span><h1>Evidence before adjectives.</h1></div><p>Filter by the kind of route you need. Filter state is reflected in the URL, so an exact portfolio view can be shared.</p></div>
+      <ProjectGrid filterable={true}/>
+    </div>
+  </section>
+</BaseLayout>
