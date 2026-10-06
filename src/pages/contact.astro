@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const endpoint=import.meta.env.PUBLIC_CONTACT_ENDPOINT || '';
+const project=Astro.url.searchParams.get('project')||'';
+---
+<BaseLayout title="Contact — Quiet Compass" description="Send a short project note to Quiet Compass." element="fire" route="E05">
+  <section data-route-section data-element="fire" data-bearing="320">
+    <div class="shell contact-grid">
+      <div data-reveal><span class="route">E05 / CONTACT</span><h1 style="font-size:var(--step-3)">Start with the destination.</h1><p class="lead">A few useful details are enough. The secure production path is API Gateway → Lambda validation → SES email delivery.</p></div>
+      <form id="contact-form" class="panel" style="padding:clamp(1rem,3vw,2rem)" data-endpoint={endpoint} data-started={Date.now()} novalidate>
+        <div class="form-row"><label for="name">Name</label><input id="name" name="name" required maxlength="120" autocomplete="name"/></div>
+        <div class="form-row"><label for="email">Email</label><input id="email" name="email" type="email" required maxlength="180" autocomplete="email"/></div>
+        <div class="form-row"><label for="project">Project type</label><select id="project" name="project"><option selected={!project}>Choose a route</option><option selected={project==='Atlas'}>Strategy / systems</option><option selected={project==='Fieldnote'}>Identity / web</option><option selected={project==='Threshold'}>Research / product</option><option>Something else</option></select></div>
+        <div class="form-row"><label for="timing">Timing</label><input id="timing" name="timing" maxlength="120" placeholder="e.g. this quarter"/></div>
+        <div class="form-row"><label for="message">What are you trying to change?</label><textarea id="message" name="message" required minlength="20" maxlength="4000"></textarea></div>
+        <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"/></label></div>
+        <button class="btn primary magnetic" type="submit">Send project note →</button>
+        <p id="form-status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
