@@ -31,6 +31,9 @@ const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'
   <script is:inline>
     (()=>{try{const t=localStorage.getItem('qc:theme');if(t)document.documentElement.dataset.theme=t}catch{}})()
   </script>
+  <script type="speculationrules" is:inline set:html={JSON.stringify({
+    prefetch:[{source:'document',where:{selector_matches:'a[data-prefetch]'},eagerness:'moderate'}]
+  })}></script>
 </head>
 <body data-base={base}>
 <a class="skip" href="#main">Skip to content</a>
