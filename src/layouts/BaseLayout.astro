@@ -1,0 +1,74 @@
+---
+import '../styles/global.css';
+interface Props { title?: string; description?: string; element?: string; route?: string; image?: string; }
+const { title='Quiet Compass', description='Calm wayfinding for purposeful digital work.', element='earth', route='A01', image } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const og = image || new URL(`og/${Astro.url.pathname === base ? 'home' : Astro.url.pathname.replace(base,'').replaceAll('/','-').replace(/-$/,'') || 'home'}.png`, Astro.site).href;
+const path = Astro.url.pathname;
+const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'],['Contact','contact/']];
+---
+<!doctype html>
+<html lang="en" data-element={element}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="description" content={description} />
+  <meta name="theme-color" content="#f3efe7" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href={canonical} />
+  <link rel="manifest" href={base + 'manifest.webmanifest'} />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={og} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>{title}</title>
+  <script is:inline>
+    (()=>{try{const t=localStorage.getItem('qc:theme');if(t)document.documentElement.dataset.theme=t}catch{}})()
+  </script>
+</head>
+<body data-base={base}>
+<a class="skip" href="#main">Skip to content</a>
+<div class="ambient-orb" aria-hidden="true"></div>
+<header class="site-header">
+  <div class="shell header-inner">
+    <a class="brand" href={base}>QUIET COMPASS <span class="route">· {route}</span></a>
+    <nav class="nav" aria-label="Primary">
+      {nav.map(([label,to],i)=><a class={i===0?'always':''} aria-current={path===base+to||(!to&&path===base)?'page':undefined} href={base+to}>{label}</a>)}
+      <button class="icon-btn" type="button" data-command-open aria-label="Open search and navigation">⌘K</button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle light and dark theme">◐</button>
+    </nav>
+  </div>
+</header>
+<main id="main"><slot /></main>
+<footer>
+  <div class="shell foot">
+    <div><strong>Quiet Compass</strong><p class="route">Calm wayfinding. Useful work. Small moments of delight.</p></div>
+    <div><span class="route">Explore</span><p><a href={base+'work/'}>Work</a><br/><a href={base+'#method'}>Method</a></p></div>
+    <div><span class="route">Info</span><p><a href={base+'about/'}>About</a><br/><a href={base+'journal/'}>Journal</a></p></div>
+    <div><span class="route">Source</span><p>Static-first<br/>Progressive by design</p></div>
+  </div>
+</footer>
+<dialog id="command-palette" aria-labelledby="palette-title">
+  <div class="palette">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+      <strong id="palette-title">Find a route</strong>
+      <button class="icon-btn" type="button" data-command-close aria-label="Close command palette">×</button>
+    </div>
+    <label class="route" for="command-input">Search pages, projects and actions</label>
+    <input id="command-input" autocomplete="off" placeholder="Type a destination…" />
+    <div id="command-results" class="palette-results" aria-live="polite"></div>
+  </div>
+</dialog>
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context':'https://schema.org',
+  '@type':'WebSite',
+  name:'Quiet Compass',
+  url:Astro.site?.href,
+  potentialAction:{'@type':'SearchAction',target:new URL(base+'work/?q={search_term_string}',Astro.site).href,'query-input':'required name=search_term_string'}
+})}></script>
+<script src={base+'src/scripts/site.ts'}></script>
+</body>
+</html>
