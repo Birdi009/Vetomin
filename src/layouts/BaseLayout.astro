@@ -1,10 +1,13 @@
 ---
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/inter';
 import '../styles/global.css';
 interface Props { title?: string; description?: string; element?: string; route?: string; image?: string; }
 const { title='Quiet Compass', description='Calm wayfinding for purposeful digital work.', element='earth', route='A01', image } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const og = image || new URL(`og/${Astro.url.pathname === base ? 'home' : Astro.url.pathname.replace(base,'').replaceAll('/','-').replace(/-$/,'') || 'home'}.png`, Astro.site).href;
+const pageKey = Astro.url.pathname === base ? 'home' : Astro.url.pathname.replace(base,'').replaceAll('/','-').replace(/-$/,'') || 'home';
+const og = image || new URL(`og/${pageKey}.png`, Astro.site).href;
 const path = Astro.url.pathname;
 const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'],['Contact','contact/']];
 ---
@@ -51,6 +54,7 @@ const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'
     <div><span class="route">Source</span><p>Static-first<br/>Progressive by design</p></div>
   </div>
 </footer>
+<div class="cursor-preview" id="cursor-preview" aria-hidden="true"></div>
 <dialog id="command-palette" aria-labelledby="palette-title">
   <div class="palette">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
@@ -69,6 +73,8 @@ const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'
   url:Astro.site?.href,
   potentialAction:{'@type':'SearchAction',target:new URL(base+'work/?q={search_term_string}',Astro.site).href,'query-input':'required name=search_term_string'}
 })}></script>
-<script src={base+'src/scripts/site.ts'}></script>
+<script>
+  import '../scripts/site.ts';
+</script>
 </body>
 </html>
