@@ -1,0 +1,10 @@
+---
+const { labels=['Discover','Define','Design','Deliver','Outcome'] }=Astro.props;
+---
+<svg class="route-svg" viewBox="0 0 1000 90" preserveAspectRatio="none" aria-hidden="true">
+  <path pathLength="1" d="M20 45 C180 15 250 75 400 45 S700 15 980 45" />
+  {labels.map((_,i)=><circle cx={20+i*240} cy={45} r="8" />)}
+</svg>
+<div class="timeline" aria-label="Case study route">
+  {labels.map((label,i)=><article data-route-step><span class="route">{String(i+1).padStart(2,'0')}</span><strong>{label}</strong></article>)}
+</div>
