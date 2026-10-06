@@ -19,6 +19,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run check
       - run: npm run build
+      - name: Validate AWS infrastructure
+        run: |
+          cd infra
+          npm install
+          npm run build
       - run: npm run test:a11y
       - run: npm run test:visual
       - run: npm run lhci
