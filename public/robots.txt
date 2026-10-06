@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://birdi009.github.io/Vetomin/sitemap-index.xml
