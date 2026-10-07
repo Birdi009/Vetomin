@@ -1,19 +1,8 @@
+import {parseBody,safeAnalytics} from './input.js';
 export const handler=async(event:any)=>{
-  let payload:any={};try{payload=JSON.parse(event.body||'{}')}catch{}
-  const safe={
-    name:String(payload.name||'unknown').slice(0,80),
-    path:String(payload.path||'').slice(0,240),
-    detail:sanitize(payload.detail),
-    ts:Number(payload.ts||Date.now())
-  };
-  console.log(JSON.stringify({type:'qc_analytics',...safe}));
-  return {statusCode:204,headers:{'access-control-allow-origin':process.env.ALLOWED_ORIGIN||'*'},body:''};
+ const headers:Record<string,string>=Object.fromEntries(Object.entries(event.headers||{}).map(([key,value])=>[key.toLowerCase(),String(value)]));
+ const allowed=process.env.ALLOWED_ORIGIN||'';
+ const response=(statusCode:number)=>({statusCode,headers:{'cache-control':'no-store',...(allowed?{'access-control-allow-origin':allowed,'vary':'Origin'}:{})},body:''});
+ if(!allowed||headers.origin!==allowed)return response(403);
+ try{const safe=safeAnalytics(parseBody(String(event.body||''),Boolean(event.isBase64Encoded),headers['content-type']||''));console.log(JSON.stringify({type:'qc_analytics',...safe}));return response(204);}catch{return response(400);}
 };
-function sanitize(v:any){
-  if(!v||typeof v!=='object')return {};
-  const out:Record<string,string|number|boolean>={};
-  for(const [k,val] of Object.entries(v).slice(0,12)){
-    if(['string','number','boolean'].includes(typeof val)) out[String(k).slice(0,60)]=typeof val==='string'?String(val).slice(0,120):val as number|boolean;
-  }
-  return out;
-}
