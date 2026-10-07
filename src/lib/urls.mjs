@@ -26,5 +26,7 @@ export function canonicalPath(pathname, base = '/') {
   let path = pathname.split(/[?#]/)[0];
   if (path === root.slice(0, -1)) return root;
   if (!path.startsWith(root)) path = joinBase(path, root);
+  // Astro exposes /404/ while writing the special error document as 404.html.
+  if (path === root + '404/' || path === root + '404') return root + '404.html';
   return /\.[a-z0-9]+$/i.test(path) ? path : path.replace(/\/+$/, '') + '/';
 }
