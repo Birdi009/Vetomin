@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run check
       - run: npm run build
       - name: Validate AWS infrastructure
