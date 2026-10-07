@@ -10,12 +10,18 @@ for (const path of ['', 'work/', 'contact/', 'projects/atlas/']) {
   });
 }
 
-test('keyboard command palette restores focus', async ({ page }) => {
+test('keyboard command palette tolerates repeated shortcut and restores focus', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('');
   const trigger = page.locator('[data-command-open]').first();
+  const shortcut = process.platform === 'darwin' ? 'Meta+K' : 'Control+K';
   await trigger.focus();
-  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K');
+  await page.keyboard.press(shortcut);
   await expect(page.locator('#command-palette')).toHaveAttribute('open', '');
+  await page.keyboard.press(shortcut);
+  await expect(page.locator('#command-palette')).toHaveAttribute('open', '');
+  expect(pageErrors).toEqual([]);
   await page.keyboard.press('Escape');
   await expect(trigger).toBeFocused();
 });
