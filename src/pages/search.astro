@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase, navigation } from '../lib/urls';
+import { cases, caseKeys } from '../data/cases';
+---
+<BaseLayout title="Find a page — Quiet Compass" description="Search Quiet Compass or browse the complete page directory." noindex><section><div class="shell narrow"><span class="route">Wayfinding / Site directory</span><h1>Find your route.</h1><p class="lead">Search the work and journal, or choose a page below. The directory remains available when search is offline.</p><div class="form-row"><label for="page-search">Search term</label><input id="page-search" type="search" data-page-search placeholder="Atlas, workflow, or reduced motion"/><button class="btn" type="button" data-page-search-open hidden>Search the site →</button></div><nav class="case-index" aria-label="Page directory">{navigation.map(([name,path])=><a href={withBase(path)}>{name}</a>)}</nav><h2>Project studies</h2>{caseKeys.map(slug=><p><a class="text-link" href={withBase(`projects/${slug}/`)}>{cases[slug].name} / {cases[slug].label}</a></p>)}<a class="text-link" href={withBase('journal/')}>Browse all essays →</a><noscript><p class="notice">Full-text search uses JavaScript. All pages remain available through this directory.</p></noscript></div></section></BaseLayout>
