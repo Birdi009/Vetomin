@@ -1,5 +1,5 @@
 import {readFileSync,writeFileSync,readdirSync,existsSync,mkdirSync} from 'node:fs';
-import {join,extname} from 'node:path';
+import {join} from 'node:path';
 import {gzipSync} from 'node:zlib';
 import {parse} from 'parse5';
 const walk=(dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(x=>x.isDirectory()?walk(join(dir,x.name)):[join(dir,x.name)]);
@@ -32,7 +32,8 @@ for(const [file,doc]of documents){
   for(const node of doc){const a=attrs(node);for(const key of ['href','src'])if(a[key])validate(a[key],file);if(a.srcset)for(const candidate of a.srcset.split(','))validate(candidate.trim().split(/\s+/)[0],file,false);if(a.property==='og:image')validate(a.content,file,false);}
 }
 for(const file of files.filter(x=>x.endsWith('.css'))){for(const match of readFileSync(file,'utf8').matchAll(/url\(['"]?([^)'"\s]+)['"]?\)/g))validate(match[1],file,false);}
-const resources=files.filter(x=>/\.(?:js|css|woff2|webp|avif|png|svg|webmanifest|xml)$/.test(x)).map(x=>base+x.replace(/^dist\//,''));
+// Include Pagefind binary indexes/fragments and WASM, not only familiar asset extensions.
+const resources=files.filter(x=>!x.endsWith('.html')&&!x.endsWith('.map')).map(x=>base+x.replace(/^dist\//,''));
 const routes=html.filter(x=>!x.endsWith('/404.html')).map(x=>base+x.replace(/^dist\//,'').replace(/index\.html$/,''));
 const javascript=files.filter(x=>x.includes('/_astro/')&&x.endsWith('.js')).reduce((sum,x)=>sum+gzipSync(readFileSync(x)).byteLength,0);
 const fonts=files.filter(x=>x.endsWith('.woff2')).reduce((sum,x)=>sum+readFileSync(x).byteLength,0);

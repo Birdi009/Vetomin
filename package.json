@@ -2,7 +2,7 @@
   "name":"quiet-compass","version":"3.0.0","private":true,"type":"module",
   "scripts":{
     "dev":"astro dev",
-    "build":"astro build && pagefind --site dist && node scripts/verify-build.mjs",
+    "build":"node scripts/check-templates.mjs && astro build && pagefind --site dist && node scripts/verify-build.mjs",
     "preview":"astro preview",
     "check":"astro check",
     "test:e2e":"playwright test",
