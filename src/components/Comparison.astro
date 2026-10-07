@@ -1,0 +1,17 @@
+---
+import ProjectMedia from './ProjectMedia.astro';
+import { getStudy } from '../lib/studies';
+const {slug}=Astro.props as {slug:string};
+const study=getStudy(slug);
+---
+<div data-compare>
+ <div data-comparison-enhanced hidden>
+  <div class="comparison-controls"><div class="segmented" role="group" aria-label="Compare concept designs"><button type="button" data-compare-snap="0" aria-pressed="false">Before</button><button type="button" data-compare-snap="50" aria-pressed="true">Compare</button><button type="button" data-compare-snap="100" aria-pressed="false">After</button></div><output for={`compare-${slug}`} class="small">50% after design</output></div>
+  <div class="comparison-stage" aria-hidden="true"><ProjectMedia slug={slug} variant="before" class="comparison-image"/><ProjectMedia slug={slug} variant="after" class="comparison-image after"/><span class="compare-divider"></span></div>
+  <label class="sr-only" for={`compare-${slug}`}>Reveal before and after comparison</label><input class="compare-range" id={`compare-${slug}`} type="range" min="0" max="100" value="50" aria-describedby={`compare-help-${slug}`}/>
+  <p class="small muted" id={`compare-help-${slug}`}>Move the slider or use the buttons. With a keyboard, use the arrow keys, Home and End. These are original concept artifacts, not client screenshots.</p>
+ </div>
+ <div data-comparison-fallback class="comparison-fallback"><figure><ProjectMedia slug={slug} variant="before" alt={study.before}/><figcaption><strong>Before concept</strong>{study.before}</figcaption></figure><figure><ProjectMedia slug={slug} variant="after" alt={study.after}/><figcaption><strong>After concept</strong>{study.after}</figcaption></figure></div>
+ <div class="measure"><p><strong>Before:</strong> {study.before}</p><p><strong>After:</strong> {study.after}</p></div>
+ <ol class="annotation-list">{study.annotations.map(item=><li><strong>{item.title}</strong>{item.text}</li>)}</ol>
+</div>

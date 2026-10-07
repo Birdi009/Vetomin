@@ -1,0 +1,12 @@
+---
+import { withBase } from '../lib/site';
+import { studies } from '../lib/studies';
+const routes=[{intent:'strategy',name:'A clearer strategy',detail:'Decisions & systems',slug:'atlas' as const},{intent:'identity',name:'A stronger identity',detail:'Voice & visual language',slug:'fieldnote' as const},{intent:'web',name:'A better website',detail:'Structure & reading paths',slug:'fieldnote' as const},{intent:'product',name:'A simpler product',detail:'Flows & onboarding',slug:'threshold' as const}];
+---
+<div data-intent-tools hidden>
+ <div class="intent-grid" role="group" aria-label="Choose what you need">{routes.map(item=><button type="button" class="intent" data-intent={item.intent} aria-pressed="false" aria-controls="intent-recommendations"><strong>{item.name}</strong><p>{item.detail}</p></button>)}</div>
+ <p data-intent-status class="sr-only" role="status" aria-live="polite"></p>
+ <div id="intent-recommendations"><p data-intent-prompt class="honesty">Choose a direction. A matching study and the reason for the recommendation will appear here.</p>{routes.map(item=><article data-recommendation={item.intent} class="recommendation" hidden><div><span class="route">A starting point for {item.intent}</span><h3>Start with {studies[item.slug].name}.</h3><p>{studies[item.slug].match}</p></div><a class="btn" href={withBase(`projects/${item.slug}/`)}>Explore {studies[item.slug].name} →</a></article>)}</div>
+ <button type="button" class="text-button small" data-intent-clear>Clear preference</button>
+</div>
+<noscript><div class="intent-grid">{routes.map(item=><a class="intent" href={withBase(`projects/${item.slug}/`)}><strong>{item.name}</strong><p>Explore {studies[item.slug].name} →</p></a>)}</div></noscript>

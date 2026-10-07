@@ -1,22 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-const endpoint=import.meta.env.PUBLIC_CONTACT_ENDPOINT || '';
-const project=Astro.url.searchParams.get('project')||'';
+import { contactEndpoint, contactEmail, withBase } from '../lib/site';
 ---
-<BaseLayout title="Contact — Quiet Compass" description="Send a short project note to Quiet Compass." element="fire" route="E05">
-  <section data-route-section data-element="fire" data-bearing="320">
-    <div class="shell contact-grid">
-      <div data-reveal><span class="route">E05 / CONTACT</span><h1 style="font-size:var(--step-3)">Start with the destination.</h1><p class="lead">A few useful details are enough. The secure production path is API Gateway → Lambda validation → SES email delivery.</p></div>
-      <form id="contact-form" class="panel" style="padding:clamp(1rem,3vw,2rem)" data-endpoint={endpoint} data-started={Date.now()} novalidate>
-        <div class="form-row"><label for="name">Name</label><input id="name" name="name" required maxlength="120" autocomplete="name"/></div>
-        <div class="form-row"><label for="email">Email</label><input id="email" name="email" type="email" required maxlength="180" autocomplete="email"/></div>
-        <div class="form-row"><label for="project">Project type</label><select id="project" name="project"><option selected={!project}>Choose a route</option><option selected={project==='Atlas'}>Strategy / systems</option><option selected={project==='Fieldnote'}>Identity / web</option><option selected={project==='Threshold'}>Research / product</option><option>Something else</option></select></div>
-        <div class="form-row"><label for="timing">Timing</label><input id="timing" name="timing" maxlength="120" placeholder="e.g. this quarter"/></div>
-        <div class="form-row"><label for="message">What are you trying to change?</label><textarea id="message" name="message" required minlength="20" maxlength="4000"></textarea></div>
-        <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"/></label></div>
-        <button class="btn primary magnetic" type="submit">Send project note →</button>
-        <p id="form-status" class="status" role="status" aria-live="polite"></p>
-      </form>
-    </div>
-  </section>
+<BaseLayout title="Contact & project brief — Quiet Compass" description="Describe what you want to change. Prepare a useful project brief, keep a local copy and see clearly whether message delivery is connected." route="E05" element="fire">
+ <section><div class="shell contact-grid"><div><span class="route">E05 / A useful first conversation</span><h1>Start with what<br/>needs to change.</h1><p class="lead">You do not need a perfect brief. A clear problem, a few constraints and the people you are designing for are enough to begin.</p><ol class="contact-details"><li><strong>The people.</strong><br/>Who needs a better experience?</li><li><strong>The friction.</strong><br/>What is hard to understand or do today?</li><li><strong>The direction.</strong><br/>What would a useful change look like?</li></ol>{!contactEndpoint&&<div class="honesty" data-contact-unavailable><strong>Message delivery is not connected on this edition.</strong><p>You can prepare, copy or save a brief here. Nothing is sent or stored on a server by those actions.</p>{contactEmail&&<p><a class="text-link" href={`mailto:${contactEmail}`}>Email {contactEmail}</a></p>}</div>}{contactEndpoint&&<p class="small muted">Submitting sends the fields below to the configured inquiry service for email delivery. Saving or copying a brief stays on your device.</p>}<p class="small"><a class="text-link" href={withBase('colophon/#privacy')}>Privacy and local preferences</a></p></div>
+ <form id="contact-form" class="panel form-panel" action={contactEndpoint||undefined} method="post" data-endpoint={contactEndpoint}>
+  <div id="form-errors" class="error-summary" role="alert" tabindex="-1" hidden></div>
+  <div class="form-row"><label for="name">Name <span class="muted">(required)</span></label><input id="name" name="name" required maxlength="120" autocomplete="name" aria-describedby="name-error"/><p id="name-error" class="field-error" data-field-error="name"></p></div>
+  <div class="form-row"><label for="email">Email <span class="muted">(required)</span></label><input id="email" name="email" type="email" required maxlength="180" autocomplete="email" inputmode="email" aria-describedby="email-error"/><p id="email-error" class="field-error" data-field-error="email"></p></div>
+  <div class="form-row"><label for="project">Project focus <span class="muted">(optional)</span></label><select id="project" name="project"><option value="">Choose a direction</option><option>Strategy / systems</option><option>Identity / web</option><option>Research / product</option><option>Something else</option></select></div>
+  <div class="form-row"><label for="timing">Timing <span class="muted">(optional)</span></label><input id="timing" name="timing" maxlength="120" placeholder="For example: exploring options for next quarter"/></div>
+  <div class="form-row"><label for="message">What are you trying to change? <span class="muted">(required)</span></label><textarea id="message" name="message" required minlength="20" maxlength="4000" aria-describedby="message-help message-error"></textarea><span id="message-help" class="form-help">20–4,000 characters. Please leave out passwords, financial details and other sensitive information.</span><p id="message-error" class="field-error" data-field-error="message"></p></div>
+  <div class="honeypot" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"/></label></div><input type="hidden" name="startedAt" value=""/>
+  <button class="btn primary" type="submit" data-contact-submit disabled={!contactEndpoint}>{contactEndpoint?'Send project note →':'Sending unavailable'}</button>
+  <div class="actions" data-brief-tools hidden><button class="btn" type="button" data-copy-brief>Copy brief</button><button class="text-button" type="button" data-download-brief>Save as text</button></div>
+  <p id="form-status" class="status small" role="status" aria-live="polite"></p>
+  <div data-brief-panel hidden><label for="brief-output">Your local brief</label><textarea id="brief-output" class="brief-output" readonly></textarea></div>
+  <noscript><p class="form-help">{contactEndpoint?'This form can be submitted without JavaScript. You will receive a response from the inquiry service.':'Delivery is not connected. You can use the questions above to write a brief in your own notes.'} Copy and save controls require JavaScript.</p></noscript>
+ </form></div></section>
 </BaseLayout>

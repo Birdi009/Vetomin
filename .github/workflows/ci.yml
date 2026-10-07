@@ -5,11 +5,16 @@ on:
     branches-ignore: [master]
 permissions:
   contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
-      PUBLIC_FEATURE_WEBGL: "false"
+      PUBLIC_FEATURE_WEBGL: 'false'
+      PUBLIC_BASE_PATH: /Vetomin/
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,8 +22,10 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:unit
       - run: npm run check
       - run: npm run build
+      - run: npm run audit:build
       - name: Validate AWS infrastructure
         run: |
           cd infra
@@ -26,7 +33,11 @@ jobs:
           npm run build
       - run: npm run test:a11y
       - run: npm run test:visual
+      - run: npm run test:smoke
       - run: npm run lhci
+      - name: Retain source provenance for review
+        if: always()
+        run: git archive --format=tar.gz HEAD -o review-source.tar.gz
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -36,4 +47,25 @@ jobs:
             playwright-report
             .lighthouseci
             dist
+            build-audit.json
+            review-source.tar.gz
+            package-lock.json
+            infra/package-lock.json
+          include-hidden-files: true
           retention-days: 14
+  root-path:
+    name: Verify root-path hosting
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PUBLIC_BASE_PATH: /
+      PUBLIC_FEATURE_WEBGL: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build && npm run audit:build
+      - run: npm run test:smoke -- --project=desktop
