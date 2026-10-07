@@ -69,7 +69,7 @@ const release = process.env.GITHUB_SHA || 'local';
       <label for="command-input">Search projects, articles and pages</label>
       <input id="command-input" type="search" autocomplete="off" placeholder="Try workflow, identity, or motion" />
       <p id="search-status" class="status small" role="status" aria-live="polite"></p>
-      <div id="search-results" class="palette-results" aria-label="Search results"></div>
+      <div id="search-results" class="palette-results" role="region" aria-label="Search results"></div>
       <nav id="command-results" class="palette-results command-routes" aria-label="Quick navigation">{nav.map(([label,to]) => <a href={withBase(to)}>{label}</a>)}<a href={withBase('projects/atlas/')}>Atlas</a><a href={withBase('projects/fieldnote/')}>Fieldnote</a><a href={withBase('projects/threshold/')}>Threshold</a></nav>
     </div>
   </dialog>
@@ -78,3 +78,9 @@ const release = process.env.GITHUB_SHA || 'local';
   <script>import '../scripts/site.ts';</script>
 </body>
 </html>
+<style is:global>
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; }
+  }
+</style>

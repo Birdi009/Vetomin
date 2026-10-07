@@ -9,6 +9,7 @@ for(const base of ['/','/Vetomin','/Vetomin/']) {
   for(const path of ['work/','projects/atlas/','media/atlas-after-640.webp','pagefind/pagefind.js','sw.js','manifest.webmanifest','contact/?project=Atlas','#method'])assert.equal(joinBase(path,base),root+path);
   assert.equal(joinBase('',base),root);assert.equal(joinBase('/work/',base),root+'work/');
   assert.equal(canonicalPath(root+'contact/?project=Atlas#form',base),root+'contact/');
+  assert.equal(canonicalPath(root+'404/',base),root+'404.html');
  });
 }
 test('unsafe URL inputs are rejected',()=>{for(const path of ['https://elsewhere.test/','//elsewhere.test/','../work/','%2e%2e/work/','foo\\bar'])assert.throws(()=>joinBase(path,'/Vetomin/'));});
