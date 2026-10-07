@@ -13,14 +13,25 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_SITE_URL: https://birdi009.github.io
+      PUBLIC_BASE_PATH: /Vetomin/
+      PUBLIC_BUILD_SHA: ${{ github.sha }}
+      PUBLIC_CONTACT_ENDPOINT: ${{ vars.PUBLIC_CONTACT_ENDPOINT }}
+      PUBLIC_ANALYTICS_ENDPOINT: ${{ vars.PUBLIC_ANALYTICS_ENDPOINT }}
+      REQUIRE_LIVE_CONTACT: ${{ vars.REQUIRE_LIVE_CONTACT }}
+      PUBLIC_FEATURE_WEBGL: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run check
       - run: npm run build
+      - name: Test the actual publish artifact before upload
+        run: npm run test:smoke
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -38,13 +49,14 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
   verify:
-    name: Verify live navigation
+    name: Verify live visitor journeys
     needs: deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
       PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.page_url }}
+      EXPECTED_BUILD_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,14 +64,17 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npx playwright install --with-deps chromium webkit
-      - name: Check deployed layout and interactions in Chromium and WebKit
+      - name: Verify release, routes, assets, mobile, search, filters and no-JS journeys
         run: |
           test -n "$PLAYWRIGHT_BASE_URL"
-          echo "Verifying live deployment: $PLAYWRIGHT_BASE_URL"
-          npm run test:visual -- --grep "route rail"
+          npm run test:smoke
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: quiet-compass-live-navigation
-          path: test-results
+          name: quiet-compass-live-journeys
+          include-hidden-files: true
+          path: |
+            test-results
+            playwright-report
+            .quality
           retention-days: 14

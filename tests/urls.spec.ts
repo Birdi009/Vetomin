@@ -1,0 +1,3 @@
+import {test,expect} from '@playwright/test';
+import {withBase,publicEndpoint} from '../src/lib/urls';
+test('URL contract covers root, Pages, nested routes, queries and hashes',()=>{for(const base of ['/','/Vetomin','/Vetomin/']){const root=base==='/'?'/':'/Vetomin/';for(const path of ['','work/','/work/','projects/atlas/','contact/?project=Atlas','#method','media/atlas-640.avif','pagefind/pagefind.js','sw.js'])expect(withBase(path,base)).toBe(root+path.replace(/^\/+/,''));}expect(()=>withBase('../secret','/')).toThrow();expect(()=>withBase('https://example.com','/')).toThrow();expect(publicEndpoint('javascript:alert(1)')).toBe('');expect(publicEndpoint('https://user:pass@example.com')).toBe('');});

@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-const base=import.meta.env.BASE_URL;
+import { withBase } from '../lib/urls';
 ---
-<BaseLayout title="Route not found — Quiet Compass" description="This route does not exist." element="earth" route="404">
-  <section><div class="shell" style="min-height:65vh;display:grid;place-items:center;text-align:center"><div><span class="route">404 / OFF ROUTE</span><h1>That path ends here.</h1><p>The compass still works.</p><a class="btn primary" href={base}>Return to arrival →</a></div></div></section>
-</BaseLayout>
+<BaseLayout title="Page not found — Quiet Compass" noindex><section><div class="shell narrow"><span class="route">404 / A different route</span><h1>This page is not here.</h1><p class="lead">The address may have changed. Your next step does not have to be a dead end.</p><div class="actions"><a class="btn primary" href={withBase()}>Go home →</a><a class="btn" href={withBase('work/')}>Browse the work</a><a class="btn" href={withBase('search/')}>Find a page</a></div></div></section></BaseLayout>

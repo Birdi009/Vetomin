@@ -1,0 +1,8 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase } from '../../lib/urls';
+export async function getStaticPaths(){return (await getCollection('journal')).map(entry=>({params:{slug:entry.id.replace(/\.mdx?$/,'')},props:{entry}}));}
+const {entry}=Astro.props;const {Content}=await render(entry);const words=(entry.body||'').split(/\s+/).filter(Boolean).length;const minutes=Math.max(1,Math.ceil(words/220));
+---
+<BaseLayout title={`${entry.data.title} — Quiet Compass`} description={entry.data.description} route="D04"><section><div class="shell narrow"><a class="text-link" href={withBase('journal/')}>← Journal</a><header class="article-head"><span class="route">{entry.data.category} · About {minutes} min read</span><h1>{entry.data.title}</h1><p class="lead">{entry.data.description}</p><p class="muted">Quiet Compass · <time datetime={entry.data.date}>{entry.data.date}</time></p></header><article class="prose article-body"><Content/></article><div class="actions"><a class="btn" href={withBase('projects/atlas/')}>See the Atlas concept →</a><a class="text-link" href={withBase('journal/')}>More from the journal</a></div></div></section></BaseLayout>

@@ -1,0 +1,4 @@
+const requested=process.env.PUBLIC_BASE_PATH??(process.env.GITHUB_ACTIONS==='true'?'/Vetomin/':'/');
+const base=`/${requested.replace(/^\/+|\/+$/g,'')}/`.replace(/\/{2,}/g,'/');
+const median=options=>['error',{...options,aggregationMethod:'median'}];
+module.exports={ci:{collect:{startServerCommand:'npm run preview -- --host 127.0.0.1',startServerReadyPattern:'Local',url:['','work/','projects/atlas/','contact/'].map(path=>'http://127.0.0.1:4321'+base+path),numberOfRuns:3},assert:{assertions:{'categories:accessibility':median({minScore:1}),'categories:seo':median({minScore:.95}),'categories:performance':median({minScore:.90}),'largest-contentful-paint':median({maxNumericValue:2500}),'cumulative-layout-shift':median({maxNumericValue:.1})}},upload:{target:'filesystem',outputDir:'.lighthouseci/reports'}}};

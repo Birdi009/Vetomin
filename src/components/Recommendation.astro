@@ -1,0 +1,13 @@
+---
+import { withBase } from '../lib/urls';
+const options=[['strategy','I need strategy','Atlas','atlas','A workflow concept about priorities, decision grouping, and context.'],['identity','I need identity','Fieldnote','fieldnote','An identity and web concept that makes specialist services easier to understand.'],['web','I need a website','Fieldnote','fieldnote','An editorial web system that connects a clear offer to visible examples.'],['product','I need product design','Threshold','threshold','An onboarding concept about first goals, guided tasks, and optional setup.']];
+const recommendationData=JSON.stringify(options.map(([value,,name,slug,copy])=>({value,name,copy,url:withBase(`projects/${slug}/`)}))).replaceAll('<','\\u003c');
+---
+<div data-recommender>
+  <div class="intent-grid" data-intent-controls hidden role="group" aria-label="Choose the work most relevant to you">
+    {options.map(([value,label])=><button class="intent" type="button" data-intent={value} aria-pressed={value==='strategy'?'true':'false'} aria-controls="recommendation"><strong>{label}</strong><span>Find a relevant starting point ↗</span></button>)}
+  </div>
+  <div id="recommendation" class="recommendation" aria-live="polite" aria-atomic="true"><div><span class="route">Your starting point</span><h3 data-recommend-title>Start with Atlas</h3><p data-recommend-copy>{options[0][4]}</p><span class="badge">Concept case study</span></div><a class="btn" data-recommend-link href={withBase('projects/atlas/')}>Explore Atlas →</a></div>
+  <script is:inline type="application/json" data-recommend-data set:html={recommendationData}></script>
+  <noscript><p class="notice">Choose directly: <a href={withBase('projects/atlas/')}>Strategy / Atlas</a>, <a href={withBase('projects/fieldnote/')}>Identity and web / Fieldnote</a>, or <a href={withBase('projects/threshold/')}>Product / Threshold</a>.</p></noscript>
+</div>

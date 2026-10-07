@@ -1,29 +1,11 @@
 ---
-import { getCollection } from 'astro:content';
+import { withBase } from '../lib/urls';
+import { cases, caseKeys } from '../data/cases';
 import ProjectMedia from './ProjectMedia.astro';
-const { filterable=false, limit } = Astro.props;
-const base=import.meta.env.BASE_URL;
-const all=(await getCollection('projects')).sort((a,b)=>a.data.order-b.data.order);
-const projects=typeof limit==='number'?all.slice(0,limit):all;
+interface Props {filterable?:boolean;limit?:number;}
+const {filterable=false,limit=3} = Astro.props;
 ---
-{filterable && <div>
-  <div class="filters" aria-label="Filter projects">
-    <span class="route">Service</span>
-    {['all','strategy','identity','research','web','product'].map(v=><button class="filter-btn" type="button" data-filter={v} data-group="service" aria-pressed={v==='all'?'true':'false'}>{v}</button>)}
-  </div>
-  <div id="filter-status" class="status" aria-live="polite"></div>
-</div>}
+{filterable && <div data-filter-controls hidden><div class="filters" role="group" aria-label="Filter projects by service"><span class="route">Service</span>{['all','strategy','identity','research','web','product'].map(v=><button class="filter-btn" type="button" data-filter={v} data-group="service" aria-pressed={v==='all'?'true':'false'}>{v}</button>)}</div><p id="filter-status" class="status" role="status">3 routes found</p><p class="empty-state" data-filter-empty hidden>No projects match this selection. <button type="button" class="filter-btn" data-reset-filter>Show all projects</button></p></div>}
 <div class="cards">
-{projects.map((p)=>{
-  const slug=p.id.replace(/\.mdx?$/,'');
-  return <a class="card" data-project data-preview={p.data.shortTitle} data-service={p.data.services.join(',')} data-industry={p.data.industry} data-outcome={p.data.outcome} data-prefetch data-tilt href={base+'projects/'+slug+'/'}>
-    <div>
-      <ProjectMedia slug={slug} alt="" class="project-visual project-media" />
-      <span class="route">{p.data.services.join(' · ')} · {p.data.year}</span>
-      <h3 class="project-title" style={`view-transition-name:project-title-${slug}`}>{p.data.title}</h3>
-      <p>{p.data.description}</p>
-    </div>
-    <span class="arrow" aria-hidden="true">↗</span>
-  </a>
-})}
+{caseKeys.slice(0,limit).map(slug => {const p=cases[slug]; return <a class="card" href={withBase(`projects/${slug}/`)} data-project data-service={p.services.join(',')} data-preview={p.name} data-prefetch data-tilt><div><ProjectMedia slug={slug} alt={`${p.name}: redesigned concept interface`}/><span class="route">{p.label}</span><h3>{p.name} / {p.headline}</h3><p>{p.description}</p></div><span class="arrow"><span>Explore the concept</span><span aria-hidden="true">↗</span></span></a>})}
 </div>

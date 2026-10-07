@@ -1,0 +1,52 @@
+---
+title: 'Reduced motion is a design mode'
+description: 'Preserve meaning, state, and agency without requiring the same movement.'
+category: Access
+date: '2026-10-07'
+order: 3
+---
+A reduced-motion experience should not feel like the broken version of the animated one. It should preserve the same decisions and information relationships through a quieter presentation.
+
+For Quiet Compass, that means treating movement as optional while keeping labels, selected states, comparisons, and feedback explicit.
+
+## Begin with the content
+
+A reveal effect can become a reliability problem when the content starts invisible and depends on JavaScript to appear. If the script fails, the visitor may receive a styled page without its most important words.
+
+The safer baseline is visible content. Enhancement may add movement after the relevant code is available, but reading should not depend on successful animation initialization.
+
+This site now keeps its main content visible by default. A preference for reduced motion is not required to receive that basic resilience.
+
+## Separate meaning from movement
+
+When a recommendation changes, its title, explanation, and destination make the new state understandable. A transition may soften the change; it does not need to carry the meaning alone.
+
+The same principle applies to the before-and-after explorer. A visitor can drag the range control, choose a named state, or read the comparison text. No single gesture is the only route to understanding the design.
+
+This is not simply about disabling effects. It is about making the information relationship explicit enough that multiple presentations remain useful.
+
+## Keep focus a first-class state
+
+A polished interface can still lose a keyboard user if opening and closing a dialog sends focus somewhere unexpected. Focus is part of navigation, not a cosmetic detail added after the animation.
+
+The search dialog returns focus to its trigger when closed. The mobile navigation remains a recognizable disclosure. Sticky content should not cover the control someone is using, and a visible focus outline should remain distinguishable in both themes.
+
+Those properties need manual checking as well as automated tests. A green accessibility scan does not establish that a complete task feels understandable with a screen reader.
+
+## Listen when preferences change
+
+Motion preferences may change during a session. Hover movement should stop when the preference changes, not merely when the page is next loaded. Color preferences and user-selected themes deserve similarly deliberate treatment.
+
+The goal is not to guess what every visitor likes. It is to respect the controls they already have and avoid making optional preferences into requirements for basic use.
+
+## A practical acceptance pass
+
+Try the whole journey without a mouse. Repeat it with reduced motion, enlarged text, and a narrow viewport. Open and close navigation, inspect a comparison, and recover from a form error. Then verify the same journey on a real device with assistive technology.
+
+Quiet Compass’s automated checks cover several of these states, but physical-device and representative-user evaluation remain separate evidence requirements. The site does not present those unfinished reviews as a compliance certification.
+
+The principle is simple: the quieter mode should remove unnecessary movement, not useful information.
+
+### Reference
+
+The [W3C guidance on animation from interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) explains why non-essential interaction-triggered motion should be disableable. This is an enhanced accessibility practice, not a claim that every website must eliminate animation.

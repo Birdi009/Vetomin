@@ -1,0 +1,39 @@
+---
+import { getCase } from '../data/cases';
+interface Props { slug: string; }
+const { slug } = Astro.props;
+const d = getCase(slug);
+const decisionData = JSON.stringify(d.decisions).replaceAll('<', '\\u003c');
+---
+<div class="diagram" data-diagram>
+  <div class="decision-path" aria-hidden="true">
+    {d.decisions.map((decision, index) => (
+      <span>{index + 1} / {decision.title}</span>
+    ))}
+  </div>
+  <div class="diagram-controls" data-enhancement hidden role="group" aria-label={`Explore ${d.name} design decisions`}>
+    {d.decisions.map((decision, index) => (
+      <button type="button" class="filter-btn" data-diagram-step={index} aria-pressed={index === 0 ? 'true' : 'false'} aria-controls={`decision-${slug}`}>{decision.title}</button>
+    ))}
+  </div>
+  <div id={`decision-${slug}`} class="decision-panel" aria-live="polite" aria-atomic="true">
+    <h3 data-decision-title>{d.decisions[0].title}</h3>
+    <dl>
+      <dt>Premise</dt><dd data-decision-observation>{d.decisions[0].observation}</dd>
+      <dt>Decision</dt><dd data-decision-choice>{d.decisions[0].choice}</dd>
+      <dt>Change</dt><dd data-decision-effect>{d.decisions[0].effect}</dd>
+    </dl>
+  </div>
+  <details>
+    <summary>Read every design decision</summary>
+    {d.decisions.map((decision) => (
+      <article>
+        <h3>{decision.title}</h3>
+        <p><strong>Premise:</strong> {decision.observation}</p>
+        <p><strong>Decision:</strong> {decision.choice}</p>
+        <p><strong>Change:</strong> {decision.effect}</p>
+      </article>
+    ))}
+  </details>
+  <script is:inline type="application/json" data-decision-data set:html={decisionData}></script>
+</div>
