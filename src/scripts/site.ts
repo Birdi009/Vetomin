@@ -12,16 +12,17 @@ function query(name:string,value:string){const url=new URL(location.href);value?
 function text(selector:string,value:string,parent:ParentNode=document){const el=$(selector,parent);if(el)el.textContent=value;}
 const analytics=publicEndpoint(import.meta.env.PUBLIC_ANALYTICS_ENDPOINT);
 function track(name:string,detail:Record<string,string|number>={}){
-  // Explicit opt-in; never transmit inquiry contents, email addresses or search strings.
   if(!analytics||prefs.get('analytics')!=='yes'||navigator.doNotTrack==='1'||(navigator as Navigator & {globalPrivacyControl?:boolean}).globalPrivacyControl)return;
-  const body=JSON.stringify({name,path:location.pathname,detail,ts:Date.now()});
+  const device=matchMedia('(pointer:coarse)').matches?'touch':'pointer';
+  const body=JSON.stringify({name,path:location.pathname,detail:{...detail,device},ts:Date.now()});
   void fetch(analytics,{method:'POST',headers:{'content-type':'application/json'},body,keepalive:true,credentials:'omit'}).catch(()=>{});
 }
 function initTheme(){
   const controls=$$<HTMLButtonElement>('[data-theme-toggle]');
   const dark=()=>root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
   const label=()=>controls.forEach(b=>b.setAttribute('aria-label',dark()?'Switch to light theme':'Switch to dark theme'));
-  controls.forEach(b=>{b.hidden=false;b.addEventListener('click',()=>{const next=dark()?'light':'dark';root.dataset.theme=next;prefs.set('theme',next);label();track('theme_change',{theme:next});});});label();
+  controls.forEach(b=>{b.hidden=false;b.addEventListener('click',()=>{const next=dark()?'light':'dark';root.dataset.theme=next;prefs.set('theme',next);label();track('theme_change',{theme:next});});});
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',label);label();
 }
 function initMenu(){
   const menu=$<HTMLDetailsElement>('.mobile-menu');if(!menu)return;
@@ -72,26 +73,26 @@ function initSearch(){
 function initFilters(){
   const buttons=$$<HTMLButtonElement>('[data-filter]');if(!buttons.length)return;
   const projects=$$('[data-project]');const choices=new Set(buttons.map(b=>b.dataset.filter));
-  const apply=(value:string,persist=false)=>{const v=choices.has(value)?value:'all';let count=0;buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===v)));projects.forEach(p=>{p.hidden=v!=='all'&&!(p.dataset.service||'').split(',').includes(v);if(!p.hidden)count++;});text('#filter-status',`${count} route${count===1?'':'s'} found`);const empty=$('[data-filter-empty]');if(empty)empty.hidden=count>0;if(persist)query('service',v==='all'?'':v);track('filter_changed',{count});};
+  const apply=(value:string,persist=false)=>{const v=choices.has(value)?value:'all';let count=0;buttons.forEach(b=>b.setAttribute('aria-pressed',b.dataset.filter===v?'true':'false'));projects.forEach(p=>{p.hidden=v!=='all'&&!(p.dataset.service||'').split(',').includes(v);if(!p.hidden)count++;});text('#filter-status',`${count} route${count===1?'':'s'} found`);const empty=$('[data-filter-empty]');if(empty)empty.hidden=count>0;if(persist)query('service',v==='all'?'':v);track('filter_changed',{count});};
   buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.filter||'all',true)));$('[data-reset-filter]')?.addEventListener('click',()=>apply('all',true));
   const restore=()=>apply(new URL(location.href).searchParams.get('service')||'all');restore();window.addEventListener('popstate',restore);const controls=$('[data-filter-controls]');if(controls)controls.hidden=false;
 }
 interface Recommendation{value:string;name:string;copy:string;url:string;}
 function initRecommendations(){
   $$('[data-recommender]').forEach(el=>{const data=$('script[data-recommend-data]',el)?.textContent;if(!data)return;const rows=JSON.parse(data) as Recommendation[];const buttons=$$<HTMLButtonElement>('[data-intent]',el);
-    const apply=(value:string,persist=false)=>{const row=rows.find(r=>r.value===value)||rows[0];buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.intent===row.value)));text('[data-recommend-title]',`Start with ${row.name}`,el);text('[data-recommend-copy]',row.copy,el);const a=$<HTMLAnchorElement>('[data-recommend-link]',el);if(a){a.href=row.url;a.textContent=`Explore ${row.name} →`;}if(persist){query('intent',row.value);track('intent_selected',{intent:row.value});}};
+    const apply=(value:string,persist=false)=>{const row=rows.find(r=>r.value===value)||rows[0];buttons.forEach(b=>b.setAttribute('aria-pressed',b.dataset.intent===row.value?'true':'false'));text('[data-recommend-title]',`Start with ${row.name}`,el);text('[data-recommend-copy]',row.copy,el);const a=$<HTMLAnchorElement>('[data-recommend-link]',el);if(a){a.href=row.url;a.textContent=`Explore ${row.name} →`;}if(persist){query('intent',row.value);track('intent_selected',{intent:row.value});}};
     buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.intent||'strategy',true)));const restore=()=>apply(new URL(location.href).searchParams.get('intent')||'strategy');restore();window.addEventListener('popstate',restore);const controls=$('[data-intent-controls]',el);if(controls)controls.hidden=false;
   });
 }
 function initComparisons(){
   $$('[data-comparison]').forEach(box=>{const input=$<HTMLInputElement>('input[type=range]',box);const after=$('.after',box);const frame=$('[data-before-after]',box);if(!input||!after||!frame)return;
-    const render=()=>{const value=Math.max(0,Math.min(100,Number(input.value)));after.style.clipPath=`inset(0 ${100-value}% 0 0)`;frame.style.setProperty('--compare',`${value}%`);input.setAttribute('aria-valuetext',`${value}% redesigned interface`);$$('[data-compare-value]',box).forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.compareValue)===value)));text('[data-compare-status]',value===0?'Showing the complete starting concept.':value===100?'Showing the complete redesigned concept.':`Showing ${value}% of the redesigned concept.`,box);};
+    const render=()=>{const value=Math.max(0,Math.min(100,Number(input.value)));after.style.clipPath=`inset(0 ${100-value}% 0 0)`;frame.style.setProperty('--compare',`${value}%`);input.setAttribute('aria-valuetext',`${value}% redesigned interface`);$$('[data-compare-value]',box).forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.compareValue)===value?'true':'false'));text('[data-compare-status]',value===0?'Showing the complete starting concept.':value===100?'Showing the complete redesigned concept.':`Showing ${value}% of the redesigned concept.`,box);};
     input.addEventListener('input',render);$$('[data-compare-value]',box).forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.compareValue||'50';render();}));render();$$('[data-enhancement]',box).forEach(x=>x.hidden=false);
   });
 }
 function initDiagrams(){
   $$('[data-diagram]').forEach(box=>{const data=$('script[data-decision-data]',box)?.textContent;if(!data)return;const rows=JSON.parse(data) as Decision[];
-    $$('[data-diagram-step]',box).forEach(b=>b.addEventListener('click',()=>{const index=Number(b.dataset.diagramStep);const row=rows[index];if(!row)return;$$('[data-diagram-step]',box).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));text('[data-decision-title]',row.title,box);text('[data-decision-observation]',row.observation,box);text('[data-decision-choice]',row.choice,box);text('[data-decision-effect]',row.effect,box);}));$$('[data-enhancement]',box).forEach(x=>x.hidden=false);
+    $$('[data-diagram-step]',box).forEach(b=>b.addEventListener('click',()=>{const index=Number(b.dataset.diagramStep);const row=rows[index];if(!row)return;$$('[data-diagram-step]',box).forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));text('[data-decision-title]',row.title,box);text('[data-decision-observation]',row.observation,box);text('[data-decision-choice]',row.choice,box);text('[data-decision-effect]',row.effect,box);}));$$('[data-enhancement]',box).forEach(x=>x.hidden=false);
   });
 }
 function initContact(){
@@ -99,7 +100,7 @@ function initContact(){
   const status=$('#form-status',form);const summary=$('#form-errors',form);const endpoint=publicEndpoint(form.dataset.endpoint);const send=$<HTMLButtonElement>('[data-send]',form);const preview=$<HTMLTextAreaElement>('[data-draft-preview]',form);const previewBox=$('[data-draft-box]',form);let sending=false;let started=Date.now();
   const get=(name:string)=>$<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>(`[name="${name}"]`,form);
   const project=new URL(location.href).searchParams.get('project');const mapping:Record<string,string>={Atlas:'Strategy / systems',Fieldnote:'Identity / web',Threshold:'Research / product'};if(project&&mapping[project]){const field=get('project');if(field)field.value=mapping[project];}
-  const validate=()=>{let first:HTMLElement|null=null;const errors:string[]=[];['name','email','message'].forEach(name=>{const field=get(name);if(!field)return;const value=field.value.trim();let error='';if(name==='name'&&!value)error='Please enter your name.';if(name==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))error='Enter an email address such as name@example.com.';if(name==='message'&&value.length<20)error='Describe the change in at least 20 characters.';field.setAttribute('aria-invalid',String(!!error));text(`#${name}-error`,error,form);if(error){errors.push(error);first??=field;}});if(summary){summary.hidden=!errors.length;summary.textContent=errors.length?`Please correct ${errors.length} field${errors.length===1?'':'s'} below. ${errors.join(' ')}`:'';}if(first)first.focus();return !errors.length;};
+  const validate=()=>{const invalid:HTMLElement[]=[];const errors:string[]=[];for(const name of ['name','email','message']){const field=get(name);if(!field)continue;const value=field.value.trim();let error='';if(name==='name'&&!value)error='Please enter your name.';if(name==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))error='Enter an email address such as name@example.com.';if(name==='message'&&value.length<20)error='Describe the change in at least 20 characters.';field.setAttribute('aria-invalid',error?'true':'false');text(`#${name}-error`,error,form);if(error){errors.push(error);invalid.push(field);}}if(summary){summary.hidden=!errors.length;summary.textContent=errors.length?`Please correct ${errors.length} field${errors.length===1?'':'s'} below. ${errors.join(' ')}`:'';}invalid[0]?.focus();return !errors.length;};
   const draft=()=>`Quiet Compass project brief\n\nName: ${get('name')?.value||''}\nEmail: ${get('email')?.value||''}\nProject: ${get('project')?.value||''}\nTiming: ${get('timing')?.value||''}\n\n${get('message')?.value||''}`;
   $('[data-prepare]',form)?.addEventListener('click',()=>{if(preview&&previewBox){preview.value=draft();previewBox.hidden=false;preview.focus();if(status)status.textContent='Draft prepared on this device. Nothing has been sent.';}});
   $('[data-copy]',form)?.addEventListener('click',async()=>{if(!preview)return;preview.value=draft();try{await navigator.clipboard.writeText(preview.value);if(status)status.textContent='Draft copied. Nothing has been sent.';}catch{preview.focus();preview.select();if(status)status.textContent='Copy is unavailable. The draft is selected so you can copy it manually.';}});
@@ -107,7 +108,7 @@ function initContact(){
   form.addEventListener('submit',async event=>{event.preventDefault();if(sending||!validate())return;if(!endpoint){if(status)status.textContent='Online delivery is not enabled. You can prepare, copy, or save your draft below.';return;}if(Date.now()-started<1200){if(status)status.textContent='Please take a moment to review your note, then send it.';return;}
     sending=true;if(send)send.disabled=true;form.setAttribute('aria-busy','true');if(status)status.textContent='Sending your project note…';const payload=Object.fromEntries(new FormData(form));const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);
     try{const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...payload,startedAt:started}),signal:controller.signal,credentials:'omit'});const result=await response.json();if(!response.ok||result.ok!==true)throw new Error(response.status===429?'Please wait a little before trying again.':'The inquiry service could not accept this message.');if(status)status.textContent='Message accepted by the inquiry service. Thank you for the project note.';form.reset();if(previewBox)previewBox.hidden=true;started=Date.now();track('contact_succeeded');}
-    catch(error){if(status)status.textContent=`${error instanceof Error&&error.name==='AbortError'?'The request timed out.':error instanceof Error?error.message:'Could not send.'} Your message is still here. Retry, or save a copy.`;track('contact_failed');}
+    catch(error){if(status)status.textContent=`${error instanceof Error&&error.name==='AbortError'?'Confirmation timed out; the service may have received the note.':error instanceof Error?error.message:'Could not confirm delivery.'} Your message is still here. Save a copy before retrying.`;track('contact_failed');}
     finally{clearTimeout(timeout);sending=false;if(send)send.disabled=false;form.removeAttribute('aria-busy');}
   });
   form.noValidate=true;$$('[data-enhancement]',form).forEach(x=>x.hidden=false);if(send)send.hidden=!endpoint;
@@ -118,13 +119,13 @@ function initMotion(){
   $$('.magnetic,[data-tilt]').forEach(el=>{el.addEventListener('pointermove',event=>{if(reduced.matches||!fine.matches)return;const e=event as PointerEvent;const box=el.getBoundingClientRect();const x=(e.clientX-box.left-box.width/2)*.025;const y=(e.clientY-box.top-box.height/2)*.025;el.style.transform=`translate(${x}px,${y}px)`;});el.addEventListener('pointerleave',()=>el.style.transform='');});reduced.addEventListener('change',()=>$$('.magnetic,[data-tilt]').forEach(el=>el.style.transform=''));
 }
 function initAnalytics(){
-  $$<HTMLButtonElement>('[data-analytics-consent]').forEach(b=>{b.hidden=!analytics;b.setAttribute('aria-pressed',String(prefs.get('analytics')==='yes'));b.addEventListener('click',()=>{const enabled=prefs.get('analytics')!=='yes';prefs.set('analytics',enabled?'yes':'no');b.setAttribute('aria-pressed',String(enabled));text('[data-analytics-status]',enabled?'Optional performance sharing enabled.':'Optional performance sharing disabled.');if(enabled)loadVitals();});});
-  const loadVitals=()=>{if(!analytics||prefs.get('analytics')!=='yes')return;void import('web-vitals').then(({onCLS,onINP,onLCP})=>{[onCLS,onINP,onLCP].forEach(fn=>fn(metric=>track('web_vital',{name:metric.name,value:metric.value,rating:metric.rating})));}).catch(()=>{});};loadVitals();
+  let loaded=false;
+  const loadVitals=()=>{if(loaded||!analytics||prefs.get('analytics')!=='yes')return;loaded=true;void import('web-vitals').then(({onCLS,onINP,onLCP})=>{[onCLS,onINP,onLCP].forEach(fn=>fn(metric=>track('web_vital',{name:metric.name,value:metric.value,rating:metric.rating})));}).catch(()=>{loaded=false;});};
+  $$<HTMLButtonElement>('[data-analytics-consent]').forEach(b=>{b.hidden=!analytics;b.setAttribute('aria-pressed',prefs.get('analytics')==='yes'?'true':'false');b.addEventListener('click',()=>{const enabled=prefs.get('analytics')!=='yes';prefs.set('analytics',enabled?'yes':'no');b.setAttribute('aria-pressed',enabled?'true':'false');text('[data-analytics-status]',enabled?'Optional performance sharing enabled.':'Optional performance sharing disabled.');if(enabled)loadVitals();});});loadVitals();
 }
 function initOffline(){
   if(!('serviceWorker'in navigator)||!isSecureContext)return;
   const register=()=>{void navigator.serviceWorker.register(withBase('sw.js',base),{scope:base,updateViaCache:'none'}).catch(()=>{document.body.dataset.offline='unavailable';});};
   if(document.readyState==='complete')register();else window.addEventListener('load',register,{once:true});
 }
-// An optional feature failing must never stop navigation, reading or the form.
 for(const initialize of [initTheme,initMenu,initSearch,initFilters,initRecommendations,initComparisons,initDiagrams,initContact,initMotion,initAnalytics,initOffline]){try{initialize();}catch(error){console.warn(`Quiet Compass: ${initialize.name} unavailable`,error);}}
