@@ -1,0 +1,40 @@
+name: AWS PR preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+jobs:
+  preview:
+    if: ${{ github.event.action != 'closed' && vars.AWS_ROLE_ARN != '' && vars.PREVIEW_BUCKET != '' && vars.PREVIEW_BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run build
+        env:
+          PUBLIC_SITE_URL: ${{ vars.PREVIEW_BASE_URL }}/pr-${{ github.event.number }}/
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - run: aws s3 sync dist/ s3://${{ vars.PREVIEW_BUCKET }}/pr-${{ github.event.number }}/ --delete
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ vars.PREVIEW_BASE_URL }}/pr-${{ github.event.number }}/`;
+            await github.rest.issues.createComment({owner:context.repo.owner,repo:context.repo.repo,issue_number:context.issue.number,body:`Quiet Compass preview: ${url}`});
+  cleanup:
+    if: ${{ github.event.action == 'closed' && vars.AWS_ROLE_ARN != '' && vars.PREVIEW_BUCKET != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - run: aws s3 rm s3://${{ vars.PREVIEW_BUCKET }}/pr-${{ github.event.number }}/ --recursive

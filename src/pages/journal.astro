@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadRemoteCms } from '../lib/cms';
+const remote=await loadRemoteCms();
+---
+<BaseLayout title="Journal — Quiet Compass" description="Notes on spatial balance, interaction, performance and digital wayfinding." element="wood" route="D04">
+  <section data-route-section data-element="wood" data-bearing="230">
+    <div class="shell">
+      <div class="section-head" data-reveal><div><span class="route">D04 / JOURNAL</span><h1>Notes from the route.</h1></div><p>Editorial content stays static, readable and indexable. Search can discover it without turning the site into a client-side application.</p></div>
+      <div class="bento-grid">
+        <article class="bento wide" data-reveal><span class="route">WAYFINDING / 6 MIN</span><h2>Motion should confirm structure.</h2><p>When an arrow moves toward its destination, a route draws between milestones, or a project remains visually continuous across navigation, animation explains something.</p></article>
+        <article class="bento" data-reveal><span class="route">PERFORMANCE / 4 MIN</span><h2>Invisible sophistication.</h2><p>The strongest advanced features are often the ones visitors never notice: prefetching, cache discipline, responsive media and careful rendering budgets.</p></article>
+        <article class="bento" data-reveal><span class="route">ACCESS / 5 MIN</span><h2>Reduced motion is art direction.</h2><p>A quieter rendering should preserve hierarchy, state and meaning rather than merely disabling every transition.</p></article>
+        {remote.map((entry)=>(
+          <article class="bento" data-reveal>
+            <span class="route">{entry.category}{entry.minutes ? ' / ' + entry.minutes + ' MIN' : ''}</span>
+            <h2>{entry.href ? <a href={entry.href}>{entry.title}</a> : entry.title}</h2>
+            <p>{entry.description}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
