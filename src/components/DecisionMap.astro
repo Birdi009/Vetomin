@@ -1,6 +1,19 @@
 ---
 import { getCase } from '../data/cases';
 interface Props {slug:string;}
-const {slug}=Astro.props;const d=getCase(slug);
+const {slug}=Astro.props;
+const d=getCase(slug);
+const decisionData=JSON.stringify(d.decisions).replaceAll('<','\\u003c');
 ---
-<div class="diagram" data-diagram><div class="decision-path" aria-hidden="true">{d.decisions.map((x,i)=><span>{i+1} / {x.title}{i<d.decisions.length-1?' →':''}</span>)}</div><div class="diagram-controls" data-enhancement hidden role="group" aria-label={`Explore ${d.name} design decisions`}>{d.decisions.map((x,i)=><button type="button" class="filter-btn" data-diagram-step={i} aria-pressed={i===0?'true':'false'} aria-controls={`decision-${slug}`}>{x.title}</button>)}</div><div id={`decision-${slug}`} class="decision-panel" aria-live="polite" aria-atomic="true"><h3 data-decision-title>{d.decisions[0].title}</h3><dl><dt>Premise</dt><dd data-decision-observation>{d.decisions[0].observation}</dd><dt>Decision</dt><dd data-decision-choice>{d.decisions[0].choice}</dd><dt>Change</dt><dd data-decision-effect>{d.decisions[0].effect}</dd></dl></div><details><summary>Read every design decision</summary>{d.decisions.map(x=><article><h3>{x.title}</h3><p><strong>Premise:</strong> {x.observation}</p><p><strong>Decision:</strong> {x.choice}</p><p><strong>Change:</strong> {x.effect}</p></article>)}</details><script type="application/json" data-decision-data set:html={JSON.stringify(d.decisions).replace(/</g,'\\u003c')}/></div>
+<div class="diagram" data-diagram>
+  <div class="decision-path" aria-hidden="true">{d.decisions.map((x,i)=><span>{i+1} / {x.title}{i<d.decisions.length-1?' →':''}</span>)}</div>
+  <div class="diagram-controls" data-enhancement hidden role="group" aria-label={`Explore ${d.name} design decisions`}>
+    {d.decisions.map((x,i)=><button type="button" class="filter-btn" data-diagram-step={i} aria-pressed={i===0?'true':'false'} aria-controls={`decision-${slug}`}>{x.title}</button>)}
+  </div>
+  <div id={`decision-${slug}`} class="decision-panel" aria-live="polite" aria-atomic="true">
+    <h3 data-decision-title>{d.decisions[0].title}</h3>
+    <dl><dt>Premise</dt><dd data-decision-observation>{d.decisions[0].observation}</dd><dt>Decision</dt><dd data-decision-choice>{d.decisions[0].choice}</dd><dt>Change</dt><dd data-decision-effect>{d.decisions[0].effect}</dd></dl>
+  </div>
+  <details><summary>Read every design decision</summary>{d.decisions.map(x=><article><h3>{x.title}</h3><p><strong>Premise:</strong> {x.observation}</p><p><strong>Decision:</strong> {x.choice}</p><p><strong>Change:</strong> {x.effect}</p></article>)}</details>
+  <script is:inline type="application/json" data-decision-data set:html={decisionData}></script>
+</div>

@@ -11,6 +11,7 @@ const key=path.startsWith(base)?path.slice(base.length).replace(/\/$/,'').replac
 const ogKey=['home','work','about','journal','contact','projects-atlas','projects-fieldnote','projects-threshold'].includes(key)?key:'home';
 const og = image || new URL(withBase(`og/${ogKey}.png`),Astro.site).href;
 const build=import.meta.env.PUBLIC_BUILD_SHA || 'development';
+const structuredData=JSON.stringify({'@context':'https://schema.org','@type':'WebSite',name:'Quiet Compass',url:new URL(base,Astro.site).href}).replaceAll('<','\\u003c');
 ---
 <!doctype html>
 <html lang="en" data-element={element}>
@@ -34,6 +35,6 @@ const build=import.meta.env.PUBLIC_BUILD_SHA || 'development';
 <main id="main" tabindex="-1" data-pagefind-body><slot/></main>
 <footer data-pagefind-ignore><div class="shell foot"><div><strong>Quiet Compass</strong><p class="muted">Thoughtful design.<br/>A clear next step.</p><span class="badge">Independent concept portfolio</span></div><div class="foot-links"><span class="route">Explore</span><a href={withBase('work/')}>Work</a><a href={withBase('about/')}>About</a><a href={withBase('journal/')}>Journal</a><a href={withBase('contact/')}>Contact</a></div><div class="foot-links"><span class="route">Behind the work</span><a href={withBase('colophon/')}>Colophon</a><a href={withBase('privacy/')}>Privacy & accessibility</a><a href={withBase('search/')}>Find a page</a></div></div><div class="shell footer-bottom"><span>© {new Date().getFullYear()} Quiet Compass</span><span>Concept work. Openly explained.</span></div></footer>
 <dialog id="command-palette" aria-labelledby="palette-title" data-pagefind-ignore><div class="palette"><div class="palette-head"><strong id="palette-title">Find a route</strong><button class="icon-btn" type="button" data-command-close aria-label="Close search">×</button></div><label class="route" for="command-input">Search pages, projects and notes</label><input id="command-input" type="search" autocomplete="off" placeholder="Try Atlas or workflow…"/><p id="search-status" role="status" class="status"></p><div id="command-results" class="palette-results"></div><nav class="search-fallback" aria-label="Search fallback">{navigation.map(([label,to])=><a href={withBase(to)}>{label}</a>)}</nav></div></dialog>
-<script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'WebSite',name:'Quiet Compass',url:new URL(base,Astro.site).href}).replace(/</g,'\\u003c')}/>
+<script is:inline type="application/ld+json" set:html={structuredData}></script>
 <script>import '../scripts/site';</script>
 </body></html>
