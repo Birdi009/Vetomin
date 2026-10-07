@@ -1,0 +1,14 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase } from '../../lib/site';
+import { readingMinutes } from '../../lib/reading.mjs';
+export async function getStaticPaths(){return (await getCollection('journal')).map(article=>({params:{slug:article.id},props:{article}}));}
+const {article}=Astro.props;
+const {Content,headings}=await render(article);
+const date=article.data.date.toISOString().slice(0,10);
+---
+<BaseLayout title={`${article.data.title} — Quiet Compass journal`} description={article.data.description} route="D04" element="wood">
+ <section><div class="shell"><a class="text-link small" href={withBase('journal/')}>← Journal</a><div class="measure"><p class="route" style="margin-top:2rem">{article.data.category}</p><h1>{article.data.title}</h1><p class="lead">{article.data.description}</p><div class="article-meta"><span>Quiet Compass / Studio notes</span><time datetime={date}>{article.data.date.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}</time><span>About {readingMinutes(article.body||'')} min read</span></div></div><div class="article-layout"><article class="prose"><Content/><p><a href={withBase('journal/')}>Read another essay →</a></p></article><nav class="article-toc" aria-label="In this essay"><h2 class="route">In this essay</h2>{headings.filter(heading=>heading.depth===2).map(heading=><a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></div></div></section>
+ <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:article.data.title,description:article.data.description,datePublished:date,author:{'@type':'Organization',name:'Quiet Compass'},mainEntityOfPage:new URL(Astro.url.pathname,Astro.site).href}).replace(/</g,'\\u003c')}/>
+</BaseLayout>

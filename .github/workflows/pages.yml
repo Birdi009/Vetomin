@@ -10,21 +10,49 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: true
+env:
+  PUBLIC_BASE_PATH: /Vetomin/
+  PUBLIC_FEATURE_WEBGL: 'false'
+  PUBLIC_CONTACT_ENDPOINT: ${{ vars.PUBLIC_CONTACT_ENDPOINT }}
+  PUBLIC_CONTACT_EMAIL: ${{ vars.PUBLIC_CONTACT_EMAIL }}
+  PUBLIC_ANALYTICS_ENDPOINT: ${{ vars.PUBLIC_ANALYTICS_ENDPOINT }}
+  PUBLIC_OWNER_NAME: ${{ vars.PUBLIC_OWNER_NAME }}
+  PUBLIC_OWNER_BIO: ${{ vars.PUBLIC_OWNER_BIO }}
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:unit
       - run: npm run check
-      - run: npm run build
+      - run: npm run build && npm run audit:build
+      - run: npm run test:a11y
+      - run: npm run test:visual
+      - run: npm run test:smoke
+      - run: npx playwright test tests/service-worker.spec.ts --project=desktop
+      - run: npm run lhci
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quiet-compass-release-quality
+          path: |
+            test-results
+            playwright-report
+            .lighthouseci
+            build-audit.json
+            dist/release.json
+          include-hidden-files: true
+          retention-days: 14
   deploy:
     environment:
       name: github-pages
@@ -38,13 +66,15 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
   verify:
-    name: Verify live navigation
+    name: Verify live experience
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     env:
       PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.page_url }}
+      EXPECTED_RELEASE_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,14 +82,21 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npx playwright install --with-deps chromium webkit
-      - name: Check deployed layout and interactions in Chromium and WebKit
+      - name: Verify the published release, routes, media and complete journeys
         run: |
           test -n "$PLAYWRIGHT_BASE_URL"
-          echo "Verifying live deployment: $PLAYWRIGHT_BASE_URL"
-          npm run test:visual -- --grep "route rail"
+          npm run test:smoke
+      - name: Verify live responsive layout and accessibility
+        run: |
+          npm run test:visual
+          npm run test:a11y
+      - name: Verify ordinary offline return and recovery
+        run: npx playwright test tests/service-worker.spec.ts --project=desktop
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: quiet-compass-live-navigation
-          path: test-results
+          name: quiet-compass-live-experience
+          path: |
+            test-results
+            playwright-report
           retention-days: 14

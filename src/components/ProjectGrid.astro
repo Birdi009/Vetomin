@@ -1,29 +1,24 @@
 ---
 import { getCollection } from 'astro:content';
 import ProjectMedia from './ProjectMedia.astro';
-const { filterable=false, limit } = Astro.props;
-const base=import.meta.env.BASE_URL;
-const all=(await getCollection('projects')).sort((a,b)=>a.data.order-b.data.order);
-const projects=typeof limit==='number'?all.slice(0,limit):all;
+import { withBase } from '../lib/site';
+interface Props { filterable?:boolean; limit?:number; }
+const {filterable=false,limit}=Astro.props;
+const projects=(await getCollection('projects')).sort((a,b)=>a.data.order-b.data.order).slice(0,limit);
+// On the Work page the cards follow h1; on Home they follow the Work section h2.
+const Heading=filterable?'h2':'h3';
 ---
-{filterable && <div>
-  <div class="filters" aria-label="Filter projects">
-    <span class="route">Service</span>
-    {['all','strategy','identity','research','web','product'].map(v=><button class="filter-btn" type="button" data-filter={v} data-group="service" aria-pressed={v==='all'?'true':'false'}>{v}</button>)}
-  </div>
-  <div id="filter-status" class="status" aria-live="polite"></div>
-</div>}
+{filterable && <div data-filter-tools hidden><div class="filters" role="group" aria-label="Filter projects by service"><span class="route">Service</span>{['all','strategy','identity','research','web','product'].map(value=><button class="filter-btn" type="button" data-filter={value} data-group="service" aria-pressed={value==='all'?'true':'false'}>{value}</button>)}</div><p id="filter-status" class="status small" role="status" aria-live="polite">{projects.length} routes found</p></div>}
+{filterable && <noscript><p class="small muted">All concept studies are shown. Each card lists its design focus.</p></noscript>}
 <div class="cards">
-{projects.map((p)=>{
-  const slug=p.id.replace(/\.mdx?$/,'');
-  return <a class="card" data-project data-preview={p.data.shortTitle} data-service={p.data.services.join(',')} data-industry={p.data.industry} data-outcome={p.data.outcome} data-prefetch data-tilt href={base+'projects/'+slug+'/'}>
-    <div>
-      <ProjectMedia slug={slug} alt="" class="project-visual project-media" />
-      <span class="route">{p.data.services.join(' · ')} · {p.data.year}</span>
-      <h3 class="project-title" style={`view-transition-name:project-title-${slug}`}>{p.data.title}</h3>
-      <p>{p.data.description}</p>
-    </div>
-    <span class="arrow" aria-hidden="true">↗</span>
-  </a>
+{projects.map(project=>{
+ const slug=project.id.replace(/\.mdx?$/,''); const data=project.data;
+ return <a class="card" data-project data-service={data.services.join(',')} data-study={slug} data-prefetch data-tilt href={withBase(`projects/${slug}/`)}>
+  <div><ProjectMedia slug={slug} alt={`${data.shortTitle}: original concept interface`} sizes="(max-width:820px) 92vw, 30vw" transitionName={`project-media-${slug}`}/><span class="route">{data.services.join(' · ')}</span><Heading class="project-card-title">{data.title}</Heading><p>{data.description}</p></div>
+  <span class="card-meta"><span>Concept study · {data.year}</span><span class="arrow" aria-hidden="true">↗</span></span>
+ </a>
 })}
 </div>
+<style>
+ .project-card-title {font-size:clamp(1.5rem,2vw,2rem);margin:.5rem 0;}
+</style>

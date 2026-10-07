@@ -2,82 +2,85 @@
 import '@fontsource-variable/fraunces';
 import '@fontsource-variable/inter';
 import '../styles/global.css';
-interface Props { title?: string; description?: string; element?: string; route?: string; image?: string; }
-const { title='Quiet Compass', description='Calm wayfinding for purposeful digital work.', element='earth', route='A01', image } = Astro.props;
-const base = import.meta.env.BASE_URL;
-const canonical = new URL(Astro.url.pathname, Astro.site);
-const pageKey = Astro.url.pathname === base ? 'home' : Astro.url.pathname.replace(base,'').replaceAll('/','-').replace(/-$/,'') || 'home';
-const og = image || new URL(`og/${pageKey}.png`, Astro.site).href;
-const path = Astro.url.pathname;
-const nav=[['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'],['Contact','contact/']];
+import { base, withBase, analyticsEndpoint } from '../lib/site';
+import { canonicalPath } from '../lib/urls.mjs';
+interface Props { title?: string; description?: string; element?: string; route?: string; image?: string; noindex?: boolean; }
+const { title = 'Quiet Compass', description = 'Clearer digital experiences. Explore original studies in strategy, identity and product design.', element = 'earth', route = 'A01', image, noindex = false } = Astro.props;
+const path = canonicalPath(Astro.url.pathname, base);
+const canonical = new URL(path, Astro.site);
+const key = path.slice(base.length).replace(/\/$/, '').replaceAll('/', '-') || 'home';
+const ogKey = ['home','work','about','journal','contact','projects-atlas','projects-fieldnote','projects-threshold'].includes(key) ? key : 'journal';
+const og = image ? new URL(image, Astro.site).href : new URL(withBase(`og/${ogKey}.png`), Astro.site).href;
+const nav = [['Home',''],['Work','work/'],['About','about/'],['Journal','journal/'],['Contact','contact/']];
+const current = (to: string) => to ? path.startsWith(withBase(to)) : path === base;
+const release = process.env.GITHUB_SHA || 'local';
 ---
 <!doctype html>
 <html lang="en" data-element={element}>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content={description} />
   <meta name="theme-color" content="#f3efe7" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="qc-release" content={release} />
+  {noindex && <meta name="robots" content="noindex" />}
   <link rel="canonical" href={canonical} />
-  <link rel="manifest" href={base + 'manifest.webmanifest'} />
+  <link rel="icon" href={withBase('icon.svg')} type="image/svg+xml" />
+  <link rel="manifest" href={withBase('manifest.webmanifest')} />
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonical} />
   <meta property="og:image" content={og} />
+  <meta property="og:image:alt" content="Quiet Compass — clear digital experiences" />
   <meta name="twitter:card" content="summary_large_image" />
   <title>{title}</title>
-  <script is:inline>
-    (()=>{try{const t=localStorage.getItem('qc:theme');if(t)document.documentElement.dataset.theme=t}catch{}})()
-  </script>
-  <script type="speculationrules" is:inline set:html={JSON.stringify({
-    prefetch:[{source:'document',where:{selector_matches:'a[data-prefetch]'},eagerness:'moderate'}]
-  })}></script>
+  <script is:inline>(()=>{try{const t=localStorage.getItem('qc:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;const dark=t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',dark?'#111610':'#f3efe7')}catch{}})()</script>
 </head>
-<body data-base={base}>
-<a class="skip" href="#main">Skip to content</a>
-<div class="ambient-orb" aria-hidden="true"></div>
-<header class="site-header">
-  <div class="shell header-inner">
-    <a class="brand" href={base}>QUIET COMPASS <span class="route">· {route}</span></a>
-    <nav class="nav" aria-label="Primary">
-      {nav.map(([label,to],i)=><a class={i===0?'always':''} aria-current={path===base+to||(!to&&path===base)?'page':undefined} href={base+to}>{label}</a>)}
-      <button class="icon-btn" type="button" data-command-open aria-label="Open search and navigation">⌘K</button>
-      <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle light and dark theme">◐</button>
-    </nav>
-  </div>
-</header>
-<main id="main"><slot /></main>
-<footer>
-  <div class="shell foot">
-    <div><strong>Quiet Compass</strong><p class="route">Calm wayfinding. Useful work. Small moments of delight.</p></div>
-    <div><span class="route">Explore</span><p><a href={base+'work/'}>Work</a><br/><a href={base+'#method'}>Method</a></p></div>
-    <div><span class="route">Info</span><p><a href={base+'about/'}>About</a><br/><a href={base+'journal/'}>Journal</a></p></div>
-    <div><span class="route">Source</span><p>Static-first<br/>Progressive by design</p></div>
-  </div>
-</footer>
-<div class="cursor-preview" id="cursor-preview" aria-hidden="true"></div>
-<dialog id="command-palette" aria-labelledby="palette-title">
-  <div class="palette">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
-      <strong id="palette-title">Find a route</strong>
-      <button class="icon-btn" type="button" data-command-close aria-label="Close command palette">×</button>
+<body data-base={base} data-analytics-endpoint={analyticsEndpoint} data-release={release}>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header" data-pagefind-ignore>
+    <div class="shell header-inner">
+      <a class="brand" href={base}><span class="brand-mark" aria-hidden="true">↗</span><span>Quiet Compass<span class="brand-sub">Design with direction</span></span></a>
+      <nav class="nav desktop-nav" aria-label="Primary">{nav.map(([label,to]) => <a href={withBase(to)} aria-current={current(to)?'page':undefined}>{label}</a>)}</nav>
+      <div class="header-tools">
+        <button class="icon-btn" type="button" data-command-open data-enhanced hidden aria-label="Open search and navigation" aria-haspopup="dialog" aria-controls="command-palette"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15 15 6 6" stroke="currentColor" stroke-width="1.8"/></svg><span class="desktop-key" aria-hidden="true">⌘K</span></button>
+        <button class="icon-btn" type="button" data-theme-toggle data-enhanced hidden aria-label="Toggle light and dark theme" aria-pressed="false"><span aria-hidden="true">◐</span></button>
+        <details class="mobile-menu" data-mobile-menu>
+          <summary>Menu <span aria-hidden="true">☰</span></summary>
+          <nav aria-label="Mobile navigation">{nav.map(([label,to]) => <a href={withBase(to)} aria-current={current(to)?'page':undefined}>{label}<span aria-hidden="true">↗</span></a>)}<a href={withBase('colophon/')}>About this site<span aria-hidden="true">↗</span></a></nav>
+        </details>
+      </div>
     </div>
-    <label class="route" for="command-input">Search pages, projects and actions</label>
-    <input id="command-input" autocomplete="off" placeholder="Type a destination…" />
-    <div id="command-results" class="palette-results" aria-live="polite"></div>
-  </div>
-</dialog>
-<script type="application/ld+json" set:html={JSON.stringify({
-  '@context':'https://schema.org',
-  '@type':'WebSite',
-  name:'Quiet Compass',
-  url:Astro.site?.href,
-  potentialAction:{'@type':'SearchAction',target:new URL(base+'work/?q={search_term_string}',Astro.site).href,'query-input':'required name=search_term_string'}
-})}></script>
-<script>
-  import '../scripts/site.ts';
-</script>
+  </header>
+  <main id="main" tabindex="-1" data-pagefind-body><slot /></main>
+  <footer data-pagefind-ignore>
+    <div class="shell foot">
+      <div><a class="brand" href={base}>Quiet Compass <span aria-hidden="true">↗</span></a><p>Less friction.<br/>More understanding.</p><p class="small muted">Original concept studies. Honest about what is—and is not—proven.</p></div>
+      <nav aria-label="Explore"><h2 class="route">Explore</h2><a href={withBase('work/')}>Selected work</a><a href={withBase('#method')}>How we think</a><a href={withBase('journal/')}>Journal</a></nav>
+      <nav aria-label="Information"><h2 class="route">Information</h2><a href={withBase('about/')}>About</a><a href={withBase('contact/')}>Contact</a><a href={withBase('colophon/')}>Colophon & privacy</a></nav>
+    </div>
+    <div class="shell footer-meta"><span>Quiet Compass · {new Date().getUTCFullYear()}</span><a href="#main">Back to top ↑</a></div>
+  </footer>
+  <dialog id="command-palette" aria-labelledby="palette-title" data-pagefind-ignore>
+    <div class="palette">
+      <div class="palette-heading"><h2 id="palette-title">Find a route</h2><button class="icon-btn" type="button" data-command-close aria-label="Close command palette">×</button></div>
+      <label for="command-input">Search projects, articles and pages</label>
+      <input id="command-input" type="search" autocomplete="off" placeholder="Try workflow, identity, or motion" />
+      <p id="search-status" class="status small" role="status" aria-live="polite"></p>
+      <div id="search-results" class="palette-results" role="region" aria-label="Search results"></div>
+      <nav id="command-results" class="palette-results command-routes" aria-label="Quick navigation">{nav.map(([label,to]) => <a href={withBase(to)}>{label}</a>)}<a href={withBase('projects/atlas/')}>Atlas</a><a href={withBase('projects/fieldnote/')}>Fieldnote</a><a href={withBase('projects/threshold/')}>Threshold</a></nav>
+    </div>
+  </dialog>
+  <div class="update-notice" data-update hidden role="status" data-pagefind-ignore>A new edition is ready. <button class="text-button" data-update-reload type="button">Reload when ready</button><button class="icon-btn" data-update-dismiss type="button" aria-label="Dismiss update">×</button></div>
+  <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'WebSite',name:'Quiet Compass',url:new URL(base,Astro.site).href}).replace(/</g,'\\u003c')} />
+  <script>import '../scripts/site.ts';</script>
 </body>
 </html>
+<style is:global>
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; }
+  }
+</style>

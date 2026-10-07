@@ -1,0 +1,10 @@
+---
+import ProjectMedia from './ProjectMedia.astro';
+import { getStudy } from '../lib/studies';
+const {slug}=Astro.props as {slug:string};
+const study=getStudy(slug);
+---
+<div class="system-map" data-diagram>
+ <div><div class="diagram-controls" data-diagram-controls hidden role="group" aria-label={`Explore the ${study.name} decisions`}>{study.nodes.map((node,index)=><button type="button" data-diagram-node={`${slug}-${node.id}`} aria-controls={`${slug}-${node.id}`} aria-pressed={index===0?'true':'false'}><span aria-hidden="true">0{index+1}</span>{node.title}</button>)}</div><p class="small muted">Follow a decision to see the artifact it changes.</p><p class="sr-only" data-diagram-status role="status" aria-live="polite"></p></div>
+ <div>{study.nodes.map(node=><article class="diagram-panel" data-diagram-panel data-summary={`Selected: ${node.title}`} id={`${slug}-${node.id}`}><ProjectMedia slug={slug} variant={node.artifact} alt={`${study.name}: ${node.title} concept artifact`}/><h3>{node.title}</h3><p><strong>Observation in the concept:</strong> {node.learned}</p><p><strong>Design decision:</strong> {node.decision}</p><p><strong>What changes:</strong> {node.changed}</p></article>)}</div>
+</div>
